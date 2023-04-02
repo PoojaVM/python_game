@@ -1,7 +1,7 @@
 import sys
 import json
 
-file_name = 'ambig.map'
+file_name = 'itinerary.map'
 if len(sys.argv) == 2:
   file_name = sys.argv[1]
 file = open(file_name)

@@ -11,4 +11,8 @@
   "exits": { "east": 1, "southeast": 0 },
   "items": ["banana", "bandana", "bellows", "deck of cards", "barbie"]
  }
+ ,
+ {"name": "A blue room", "desc": "This room is simple, too, but with blue walls.",
+  "exits": { "west": 2, "south": 0 }
+ }
 ]
