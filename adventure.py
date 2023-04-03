@@ -4,8 +4,12 @@ import json
 file_name = 'itinerary.map'
 if len(sys.argv) == 2:
   file_name = sys.argv[1]
-file = open(file_name)
 
+try:
+  file = open(file_name)
+except FileNotFoundError:
+  print('Please make sure the map file exists, is named correctly, and is located in the same path as current file.')
+  sys.exit()
 # Stores game map
 game_engine = json.load(file)
 # Stores current state of game
@@ -17,22 +21,14 @@ state = {
 }
 # Stores messages to show in different cases while parsing input
 messages = {
-  'go': {
-    'less_words': "Sorry, you need to 'go' somewhere.",
-    'more_words': "Try to specify in less words where you'd like to go. For example - 'Go west'."
-  },
-  'get': {
-    'less_words': "Sorry, you need to 'get' something",
-    'more_words': "Try to specify in less words what you'd like to get. For example - 'Get hat'."
-  },
-  'drop': {
-    'less_words': "Sorry, you need to 'drop' something",
-    'more_words': "Try to specify in less words what you'd like to drop. For example - 'Drop hat'."
-  }
+  'go': "Sorry, you need to 'go' somewhere.",
+  'get': "Sorry, you need to 'get' something",
+  'drop': "Sorry, you need to 'drop' something",
+  'collect': "Sorry, you need to 'collect' something"
 }
 # Stores valid verbs. Value is number of words required to execute them.
 # TODO - Delete if you are not using it
-verbs = { 'go': 2, 'get': 2, 'drop': 2, 'look': 1, 'inventory': 1, 'quit': 1, 'help': 1 }
+verbs = { 'go': 2, 'get': 2, 'drop': 2, 'collect': 2, 'look': 1, 'inventory': 1, 'quit': 1, 'help': 1, 'attack': 1 }
 
 
 def view_room(room):
@@ -46,15 +42,16 @@ def view_room(room):
   print()
   print(f"Exits: {' '.join(list(room['exits']))}")
   print()
+  if 'troops' in room and len(list(room['troops'])) > 0:
+    print(f"Troops: {', '.join(list(room['troops']))}")
+    print()
 
 # Only comes here for verbs - go, get, drop
 # TODO - Handle drop
 def parse_input_helper(words):
   verb = words[0].lower()
   if len(words) == 1:
-    print(f"{messages[verb]['less_words']}")
-  elif len(words) > 2:
-    print(f"{messages[verb]['more_words']}")
+    print(f"{messages[verb]}")
   else:
     if verb == 'go':
       next_room = words[1].lower()
@@ -122,7 +119,31 @@ def parse_input_helper(words):
           state['inventory'].remove(item_to_drop)
           print(f"You drop up the {item_to_drop}")
         else:
-          print(f"There are multiple items to drop. Please pick one from {' '.join(possible_choices)}")
+          print(f"There are multiple items to drop. Please pick one from {', '.join(possible_choices)}")
+    elif verb == 'collect':
+      item_to_collect = words[1].lower()
+      if item_to_collect in state['location']['troops']:
+        # TODO - This might throw error if items array does not exist in a room. Verify.
+          if 'troops' in state.keys():
+            state['troops'][item_to_collect] = state['location']['troops'][item_to_collect]
+          else:
+            state['troops'] = {item_to_collect: state['location']['troops'][item_to_collect]}
+          del state['location']['troops'][item_to_collect]
+          print(f"Congrats! {item_to_collect} now will attack the enemy for you")
+      else:
+        possible_choices = list(filter(lambda item: item_to_collect in item and item.index(item_to_collect) == 0, state['location']['troops']))
+        if len(possible_choices) == 0:
+          print(f"There's no {item_to_collect} to collect.")
+        elif len(possible_choices) == 1:
+          item_to_collect = possible_choices[0]
+          if 'troops' in state.keys():
+            state['troops'][item_to_collect] = state['location']['troops'][item_to_collect]
+          else:
+            state['troops'] = {item_to_collect: state['location']['troops'][item_to_collect]}
+          del state['location']['troops'][item_to_collect]
+          print(f"Congrats! {item_to_collect} now will attack the enemy for you")
+        else:
+          print(f"There are multiple items to drop. Please pick one from {', '.join(possible_choices)}")
 
 # Starts processing input to take action if verbs are valid
 def process_input(words, room):
@@ -141,17 +162,28 @@ def process_input(words, room):
       print("You can run the following commands:")
       for verb in verbs:
         print(f"{verb} ..." if verbs[verb] > 1 else f"{verb}")
-    elif verb in ['go', 'get', 'drop']:
+    elif verb in ['go', 'get', 'drop', 'collect']:
       noun = 'somewhere' if verb == 'go' else 'something'
       print(f"Sorry, you need to '{verb}' {noun}.")
-    else:
-      possible_directions = list(filter(lambda exit: verb in exit and exit.index(verb) == 0, state['location']['exits']))
-      if len(possible_directions) == 1:
-        parse_input(f"go {possible_directions[0]}")
-      elif len(possible_directions) > 1:
-        print(f"Where would you like to go out of {', '.join(possible_directions)}")
+    elif verb == 'attack':
+      if 'enemy' not in state['location']:
+        print("You can't fight in this room. The enemy is in some other room.")
+      else:
+        if 'troops' not in state:
+          print("Uh oh. You lost! Try gathering some defense before attacking. Better luck next time!")
+          sys.exit()
+        else:
+          enemy_hitpoints = state['location']['enemy']
+          for troop in state['troops']:
+            attack_type = troop.split('_')[0]
+            enemy_hitpoints[attack_type] -= state['troops'][troop]
+            if enemy_hitpoints[attack_type] <= 0:
+              print("Hurray! You won!!! Goodbye!")
+              sys.exit()
+          print("Uh oh. You lost! Better luck next time!")
+          sys.exit()
 
-  elif verb in ['go', 'get', 'drop']:
+  elif verb in ['go', 'get', 'drop', 'collect']:
     parse_input_helper(words)
 
 # Shows current state of user
@@ -168,7 +200,15 @@ def parse_input(input):
     else:
       possible_actions = list(filter(lambda action: verb in action and action.index(verb) == 0, verbs))
       if len(possible_actions) == 0:
-        print(f"Please choose actions from {', '.join(verbs)}.")
+        possible_exits = list(filter(lambda exit: verb in exit and exit.index(verb) == 0, state['location']['exits']))
+        if verb in state['location']['exits']:
+          process_input(['go', possible_exits[0]], room)
+        elif len(possible_exits) == 0:
+          print(f"Please choose actions from {', '.join(verbs)}.")
+        elif len(possible_exits) == 1:
+          process_input(['go', possible_exits[0]], room)
+        else:
+          print(f"Where would you like to go out of {', '.join(possible_exits)}")
       elif len(possible_actions) == 1:
         words[0] = possible_actions[0]
         process_input(words, room)
@@ -179,7 +219,7 @@ class QuitGameError(Exception):
   pass
 
 def play_game():
-  while state['input'] != 'quit':
+  while state['input'].lower() != 'quit':
     try:
       state['input'] = input('What would you like to do? ')
       if state['input'].lower() != 'quit':

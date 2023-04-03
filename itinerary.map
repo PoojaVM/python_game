@@ -1,18 +1,30 @@
 [
- {"name": "A white room", "desc": "You are in a simple room with white walls.",
-  "exits": { "north": 1, "northwest": 2 }
- }
-,
- {"name": "A blue room", "desc": "This room is simple, too, but with blue walls.",
-  "exits": { "west": 2, "south": 0 }
- }
-,
- {"name": "A green room", "desc": "You are in a simple room, with bright green walls.",
-  "exits": { "east": 1, "southeast": 0 },
-  "items": ["banana", "bandana", "bellows", "deck of cards", "barbie"]
- }
- ,
- {"name": "A blue room", "desc": "This room is simple, too, but with blue walls.",
-  "exits": { "west": 2, "south": 0 }
+ {
+    "name": "The Ground Zone",
+    "desc": "Has ground troops with some hitpoints associated with them. Type 'collect troop' to gather troops to help you fight boss when you encounter her.",
+    "exits": { "south": 2, "east": 3 },
+    "troops": { "ground_bandit": 3, "ground_pekka": 7 },
+    "items": ["knife", "gun"]
+ },
+ {
+    "name": "The Aqua Zone",
+    "desc": "Has underwater troops with some hitpoints associated with them. Type 'collect troop' to gather troops to help you fight boss when you encounter her.",
+    "exits": { "east": 3, "west": 0 },
+    "troops": { "aqua_ghost": 4, "aqua_monk": 3 },
+    "items": ["ice knife", "axe"]
+ },
+ {
+    "name": "The Air Zone",
+    "desc": "Has flying troops along with some hitpoints associated with them. Type 'collect troop' to gather troops to help you fight boss when you encounter her.",
+    "exits": { "west": 0, "north": 1 },
+    "items": ["gems", "gold"],
+    "troops": { "air_goblin": 5, "air_balloon": 2 }
+ },
+ {
+    "name": "Big Boss Paradise",
+    "desc": "This is where your enemy stays. You break any of her defense(water, air, ground), you win. Remember, if you lose any of your defenses first, then you lose. Type 'attack' to start the battle if you're ready. Feel free to go to other rooms and look for troops otherwise.",
+    "exits": { "south": 2, "north": 1 },
+    "items": ["sword"],
+    "enemy": {"ground": 9, "aqua": 7, "air": 10}
  }
 ]
