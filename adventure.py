@@ -1,7 +1,7 @@
 import sys
 import json
 
-file_name = 'itinerary.map'
+file_name = 'battle.map'
 if len(sys.argv) == 2:
   file_name = sys.argv[1]
 
@@ -100,7 +100,7 @@ def parse_input_helper(words):
       item_to_drop = words[1].lower()
       if item_to_drop in state['inventory']:
         # TODO - This might throw error if items array does not exist in a room. Verify.
-          if 'items' in state['location'].keys():
+          if 'items' in state['location']:
             state['location']['items'].append(item_to_drop)
           else:
             state['location']['items'] = [item_to_drop]
@@ -112,7 +112,7 @@ def parse_input_helper(words):
           print(f"There's no {item_to_drop} in inventory to drop.")
         elif len(possible_choices) == 1:
           item_to_drop = possible_choices[0]
-          if 'items' in state['location'].keys():
+          if 'items' in state['location']:
             state['location']['items'].append(item_to_drop)
           else:
             state['location']['items'] = [item_to_drop]
@@ -124,7 +124,7 @@ def parse_input_helper(words):
       item_to_collect = words[1].lower()
       if item_to_collect in state['location']['troops']:
         # TODO - This might throw error if items array does not exist in a room. Verify.
-          if 'troops' in state.keys():
+          if 'troops' in state:
             state['troops'][item_to_collect] = state['location']['troops'][item_to_collect]
           else:
             state['troops'] = {item_to_collect: state['location']['troops'][item_to_collect]}
@@ -136,7 +136,7 @@ def parse_input_helper(words):
           print(f"There's no {item_to_collect} to collect.")
         elif len(possible_choices) == 1:
           item_to_collect = possible_choices[0]
-          if 'troops' in state.keys():
+          if 'troops' in state:
             state['troops'][item_to_collect] = state['location']['troops'][item_to_collect]
           else:
             state['troops'] = {item_to_collect: state['location']['troops'][item_to_collect]}
@@ -191,7 +191,7 @@ def process_input(words, room):
 def parse_input(input):
   room = state['location']
   if input != '':
-    # Do not do anything for look. Just show current room
+    input = input.lower()
     input = " ".join(input.split())
     words = input.split(" ", 1)
     verb = words[0].lower()
@@ -217,9 +217,11 @@ def parse_input(input):
       else:
         print(f"What would you like to do out of {', '.join(possible_actions)}?")
 
+# Custom exception class when player types 'quit'
 class QuitGameError(Exception):
   pass
 
+# Main method
 def play_game():
   while state['input'].lower() != 'quit':
     try:
