@@ -1,7 +1,7 @@
 Pooja Mule <pmule@stevens.edu>
 
 # Github Repo Link
-https://github.com/PoojaVM/python_game.git
+https://github.com/PoojaVM/python_game
 
 # Running instructions
 1. Please download all files - itinerary.map, README.md, adventure.py
